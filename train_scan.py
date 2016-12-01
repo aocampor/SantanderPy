@@ -30,7 +30,7 @@ labelnames = ['ind_ahor_fin_ult1', 'ind_aval_fin_ult1', 'ind_cco_fin_ult1',
               'ind_nomina_ult1', 'ind_nom_pens_ult1', 'ind_recibo_ult1'
               ]
 
-param = {'max_depth': 4, 'objective': 'binary:logistic', 'learning_rate': 0.21,
+param = {'max_depth': 20, 'objective': 'binary:logistic', 'learning_rate': 0.21,
          'n_estimators': 10, 'gamma': 0, 'min_child_weight': 1, 'max_delta_step': 5,
          'reg_alpha': 2.14, 'reg_lambda': 0.7, 'scale_pos_weight': 3.3}
 
@@ -76,7 +76,7 @@ def PlotConfusion(conf_arr, title):
     alphabet = 'AB'
     plt.xticks(range(width), alphabet[:width])
     plt.yticks(range(height), alphabet[:height])
-    plt.savefig(title + '.png', format='png')
+    plt.savefig("plots/" + title + '.png', format='png')
 
 def Regression(train, labels, topred, label):
     clfa = Train(train, labels, label)
@@ -133,7 +133,7 @@ def PlotList(accurs):
     plt.xticks(x, labelnames, rotation='vertical')
     plt.margins(0.2)
     plt.subplots_adjust(bottom=0.15)
-    plt.savefig('accuracy.png', format='png')
+    plt.savefig('plots/accuracy.png', format='png')
 
 def Modify(df, label):
     df[label] = pd.to_numeric(df[label], errors='coerce')
@@ -194,7 +194,7 @@ def PrintScatters(df):
         if printing:
             print 'Printing ' + item
         df.plot(kind='scatter', x='renta', y=item)
-        plt.savefig(item + '.png')
+        plt.savefig("plots/"+ item + '.png')
 
 def ReadCSV(namecsv):
     df = pd.read_csv(namecsv,
@@ -298,7 +298,7 @@ def AccPlot(train, labels, n_estimators_range, param_name, label):
     entry = -1
     for i in range( len(n_estimators_range) ):
         newmax = False
-        if(max_train_score_mean <= train_scores_mean[i]):
+        if(max_train_score_mean < train_scores_mean[i]):
             max_train_score_mean = train_scores_mean[i]
             max_train_score_std = train_scores_std[i]
             max_test_score_mean = test_scores_mean[i]
@@ -309,7 +309,7 @@ def AccPlot(train, labels, n_estimators_range, param_name, label):
             min_train_score_std = train_scores_std[i]
             min_test_score_mean = test_scores_mean[i]
             min_test_score_std = test_scores_std[i]
-        if( test_scores_mean[i] + test_scores_std[i] >= train_scores_mean[i] ):
+        if( test_scores_mean[i] + test_scores_std[i] >= train_scores_mean[i] - train_scores_std[i] ):
             if(newmax):
                 entry = i
 
@@ -352,16 +352,16 @@ def AccPlot(train, labels, n_estimators_range, param_name, label):
         plt.axhline(y=1, color='k', ls='dashed')
 
         plt.legend(loc="best")
-        plt.savefig( param_name + '.png')
+        plt.savefig( "plots/" + label + '_' + param_name + '.png')
 
 def TunningParam(train, labels, label):
-    n_estimators_range = np.linspace(1, 20, 20).astype('int')
-    AccPlot(train, labels, n_estimators_range, 'n_estimators', label)
-    n_estimators_range = np.linspace(1, 20, 20).astype('int')
-    AccPlot(train, labels, n_estimators_range, 'max_depth', label)
+    #n_estimators_range = np.linspace(1, 20, 20).astype('int')
+    #AccPlot(train, labels, n_estimators_range, 'n_estimators', label)
+    #n_estimators_range = np.linspace(1, 20, 20).astype('int')
+    #AccPlot(train, labels, n_estimators_range, 'max_depth', label)
     n_estimators_range = np.linspace(0.01, 10, 20).astype('float')
     AccPlot(train, labels, n_estimators_range, 'min_child_weight', label)
-    n_estimators_range = np.linspace(0, 20, 10).astype('float')
+    n_estimators_range = np.linspace(0.01, 1, 10).astype('float')
     AccPlot(train, labels, n_estimators_range, 'scale_pos_weight', label)
     n_estimators_range = np.linspace(0.01, 1, 15).astype('float')
     AccPlot(train, labels, n_estimators_range, 'learning_rate', label)
