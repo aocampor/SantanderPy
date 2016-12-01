@@ -141,7 +141,6 @@ def PlotList(accurs):
     plt.savefig('accuracy.png', format='png')
 
 def Modify(df, label):
-    # print label
     df[label] = pd.to_numeric(df[label], errors='coerce')
     df = df[df[label] >= 0]
     return df
@@ -227,7 +226,6 @@ def SplitLabels(dfa):
     # diclabels = {}
     dflabels = dfa.ix[:, 19:43]
     dfclients = dfa['ncodpers']
-    #print list(dflabels)
     for item in labelnames:
         # diclabels[item] = df[item]
         dfa = dfa.drop(item, 1)
@@ -278,10 +276,13 @@ def AccPlot(train, labels, n_estimators_range, param_name, label):
         print "Training " + label + " For " + param_name
 
     cv = StratifiedKFold(n_splits=nsplits)
-    train_scores, test_scores = validation_curve(
-        XGBClassifier(**params[label]), train, labels, param_name=param_name,
-        param_range=n_estimators_range, cv=cv, scoring='precision'
-    )
+    nonzeros = np.count_nonzero(labels)
+    print nonzeros, len(labels)
+    if(nonzeros > 0):
+        train_scores, test_scores = validation_curve(
+            XGBClassifier(**params[label]), train, labels, param_name=param_name,
+            param_range=n_estimators_range, cv=cv, scoring='precision'
+        )
 
     train_scores_mean = np.mean(train_scores, axis=1)
     train_scores_std = np.std(train_scores, axis=1)
@@ -357,95 +358,6 @@ def AccPlot(train, labels, n_estimators_range, param_name, label):
         plt.legend(loc="best")
         plt.savefig( param_name + '.png')
 
-def GetParams(label):
-    param = {'max_depth': 10,
-             'silent': 0, 'objective': 'binary:logistic',
-             'learning_rate': 0.3, 'n_estimators': 11,
-             'gamma': 1, 'min_child_weight': 1,
-             # 'max_delta_step': 5,
-             'reg_alpha': 0, 'reg_lambda': 1,
-             'scale_pos_weight': 0.9
-             }
-    param1 = {'max_depth': 14,
-              'silent': 0, 'objective': 'binary:logistic',
-              'learning_rate': 0.3, 'n_estimators': 10,
-              'gamma': 1, 'min_child_weight': 1,
-              # 'max_delta_step': 5,
-              'reg_alpha': 0, 'reg_lambda': 4,
-              'scale_pos_weight': 2.5
-              }
-    param1a = {'max_depth': 4,
-              'silent': 0, 'objective': 'binary:logistic',
-              'learning_rate': 0.3, 'n_estimators': 10,
-              'gamma': 1, 'min_child_weight': 1,
-              # 'max_delta_step': 5,
-              'reg_alpha': 1.428, 'reg_lambda': 0,
-              'scale_pos_weight': 3.3
-              }
-    param2 = {'max_depth': 14,
-              'silent': 0, 'objective': 'binary:logistic',
-              'learning_rate': 0.3, 'n_estimators': 10,
-              'gamma': 1, 'min_child_weight': 1,
-              # 'max_delta_step': 5,
-              'reg_alpha': 0, 'reg_lambda': 4,
-              'scale_pos_weight': 3
-              }
-    param3 = {'max_depth': 14,
-              'silent': 0, 'objective': 'binary:logistic',
-              'learning_rate': 0.7, 'n_estimators': 20,
-              'gamma': 1, 'min_child_weight': 1,
-              # 'max_delta_step': 5,
-              'reg_alpha': 0, 'reg_lambda': 0,
-              'scale_pos_weight': 5
-              }
-    param3a = {'max_depth': 14,
-              'silent': 0, 'objective': 'binary:logistic',
-              'learning_rate': 0.7, 'n_estimators': 20,
-              'gamma': 1, 'min_child_weight': 1,
-              # 'max_delta_step': 5,
-              'reg_alpha': 0, 'reg_lambda': 0,
-              'scale_pos_weight': 7
-              }
-    param4 = {'max_depth': 14,
-              'silent': 0, 'objective': 'binary:logistic',
-              'learning_rate': 0.3, 'n_estimators': 10,
-              'gamma': 1, 'min_child_weight': 1,
-              # 'max_delta_step': 5,
-              'reg_alpha': 0, 'reg_lambda': 1,
-              'scale_pos_weight': 1.45
-              }
-    param5 = {'max_depth': 14,
-              'silent': 0, 'objective': 'binary:logistic',
-              'learning_rate': 0.3, 'n_estimators': 10,
-              'gamma': 1, 'min_child_weight': 1,
-              # 'max_delta_step': 5,
-              'reg_alpha': 0, 'reg_lambda': 1,
-              'scale_pos_weight': 3.4
-              }
-
-    if label == 'ind_cco_fin_ult1' :
-        return param
-    elif (label == 'ind_ctop_fin_ult1' or
-          label == 'ind_ctju_fin_ult1'
-          ):
-        return param1
-    elif label == 'ind_cno_fin_ult1':
-        return param1a
-    elif (label == 'ind_ctma_fin_ult1' or label == 'ind_nom_pens_ult1' or
-          label == "ind_nomina_ult1"):
-        return param2
-    elif (label == 'ind_ahor_fin_ult1' or label == 'ind_aval_fin_ult1'):
-        return param3
-    elif(label == 'ind_cder_fin_ult1'):
-        return param3a
-    elif label == 'ind_recibo_ult1':
-        return param4
-    elif (label == 'ind_ecue_fin_ult1' or label == "ind_reca_fin_ult1" or
-          label == "ind_tjcr_fin_ult1"):
-        return param5
-    else:
-        return param5
-
 def TunningParam(train, labels, label):
     n_estimators_range = np.linspace(1, 20, 20).astype('int')
     AccPlot(train, labels, n_estimators_range, 'n_estimators', label)
@@ -466,14 +378,11 @@ def TunningParam(train, labels, label):
 
 def Train(train, labels, label):
     try:
-        clfa = Gaussian(label)
+        #clfa = Gaussian(label)
         #clfa = Bernoulli()
         #clfa = SDG(label)
         #clfa = GPC()
-        #params = GetParams(label)
-        #print params[label]
-        TunningParam(train, labels, label)
-        #print params[label]
+        #TunningParam(train, labels, label)
         clfa = XGBClassifier(**params[label])
         clfa.fit(train, labels)
         #xgb.plot_importance(clfa, importance_type='gain', xlabel='Gain')
@@ -532,12 +441,13 @@ if __name__ == "__main__":
         for label in labelnames:
             params[label] = param
 
-    printParams(params)
+    if(printing):        
+        printParams(params)
             
-    #TrainAndDump(df, dflabels)
+    TrainAndDump(df, dflabels)
 
     #PrintScatters(df)
-    preds, accurs, confmatrix = MakeRegressionsLoop(df, dflabels)
+    #preds, accurs, confmatrix = MakeRegressionsLoop(df, dflabels)
 
     #outdf = pd.DataFrame( {'ncodpers': dfclients[limit_rows / 2:limit_rows], labelnames[0]:preds[0],
     #                        labelnames[1]: preds[1], labelnames[2]: preds[2], labelnames[3]: preds[3],
